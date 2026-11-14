@@ -284,26 +284,49 @@ comparison, so these two results do not justify a global compiler switch.
 Regenerate `progress/status.json` after changing source profiles.
 
 **Boot memory-card helpers, 14 November 2026.** Five retained USA boot
-trials remain nonmatching after an independent SN link at their retail
-addresses. The rebuilt default GNU route, `gnu-ee-trial` and `sdk991111`,
-all with `-O2 -G0` and the same GNU assembler, produce identical linked
-text for the retained sources. The
-[Dan-skin setter](../../nonmatching/boot/MEMCARD_SetDanSkinUnlocked__FUi.c),
-[widescreen setter](../../nonmatching/boot/MEMCARD_SetWideScreenToMemcard__FUi.c)
-and [hardcore setter](../../nonmatching/boot/MEMCARD_SetHardcoreModeBit__FUib.c)
-compile to 32/36, 32/36 and 44/48 bytes respectively; each first differs
-at byte 2. The compiler removes a byte mask retained by retail; three
-scalar forms and a byte-bitfield view did not restore it. The
-[header updater](../../nonmatching/boot/MEMCARD_SetHeaderDetail__FUiUiUiUiUi.c)
-compiles to 40/52 bytes, first difference at byte 17: a typed view and
-byte-offset stores both remove pointer copies and change store order.
-The [saving query](../../nonmatching/boot/MEMCARD_Saving__Fv.c) compiles to
-48/52 bytes, first difference at byte 20; a nested comparison is identical,
-while an early return reaches 52 bytes but changes the return paths.
-Reopen with evidence for the original types/value lifetimes or a measured
-compiler-lowering cause with accepted-body regression controls. These are
-isolated nonmatches, with provisional extents and no complete-program gate
-or matching credit.
+sources, measured after an independent SN link at their retail addresses
+under the rebuilt default GNU route, `gnu-ee-trial` and `sdk991111`, all
+with `-O2 -G0` and the same GNU assembler; the three routes agree on every
+linked text. The first trials kept one local copy or one pointer and came
+out short: the setters lost a byte mask that retail keeps (32/36, 32/36 and
+44/48 bytes), the header updater lost two pointer copies (40/52).
+
+The cause is the source shape, not the compiler. Retail matches code that
+names the stored object again in each statement. For the
+[Dan-skin setter](../../nonmatching/boot/MEMCARD_SetDanSkinUnlocked__FUi.c)
+and [widescreen setter](../../nonmatching/boot/MEMCARD_SetWideScreenToMemcard__FUi.c),
+`flags &= ~BIT;` followed by `flags |= (enabled ? BIT : 0);` on the stored
+byte itself gives all 36 bytes: the second statement reuses the value the
+first one stored, the masked value therefore has two uses, and the byte
+extension between the two masks cannot be merged away. For the
+[header updater](../../nonmatching/boot/MEMCARD_SetHeaderDetail__FUiUiUiUiUi.c),
+four assignments that each index the header array again give all 52 bytes:
+the repeated address computations become register copies that stay
+separate. These three are exact local witnesses, not accepted matches: no
+complete-program gate, boundary review or promotion yet. When a small
+accessor keeps a redundant mask, extension or register copy, try the
+repeated-object form before suspecting the compiler.
+
+The [hardcore setter](../../nonmatching/boot/MEMCARD_SetHardcoreModeBit__FUib.c)
+has the same two statements and is 48 compiled bytes, 30 equal positions,
+first difference at byte 16. Its mangled name carries a C++ `bool`
+parameter. Retail keeps a conditional move on the raw argument; a C `int`
+argument turns `enabled ? 1 : 0` into a comparison result that is ORed in.
+With a real `bool` parameter, the C++ front ends shipped in the owner's SN
+packages (2.9-ee-991111, 2.95.2 and ProDG 2.95.3) each produce all 48
+retail bytes from those two statements. The boot gate has no C++ route;
+this is the first boot body measured to need one, and
+`_GLOBAL_$I$SYSTEMS_memcard_ps2.cppBRcaaa` shows the unit was C++. Reopen
+when a C++ front end is qualified for boot sources.
+
+The [saving query](../../nonmatching/boot/MEMCARD_Saving__Fv.c) still
+compiles to 48/52 bytes, first difference at byte 20: retail computes the
+comparison in one register and copies it to the result. A nested
+comparison is identical; an early return reaches 52 bytes but changes the
+return paths; about fifty further C and C++ spellings of the same test
+(conditional expressions, `switch`, `goto`, inline helpers, `bool` result)
+give one of those two shapes. Reopen with evidence for a second use of the
+comparison value or for the original helper structure.
 
 ### Blocker 18
 

@@ -1,24 +1,20 @@
 /* USA SCUS_976.15 boot: MEMCARD_SetWideScreenToMemcard__FUi, 0x01E62810.
- * Privately reconstructed from the owner's retail program; no imported source.
- * Observed body: 36 bytes; extent remains provisional, not an acceptance claim.
- * Measured 14 November 2026 with rebuilt GNU EE and SDK tools, -O2 -G0,
- * GNU assembler and independent SN link at the retail address:
- * 32 compiled bytes; 17 equal byte positions in the 32-byte compared prefix;
- * first differing byte +0x02. Pinned-route, gnu-ee-trial and sdk991111 agree
- * on this source's linked text. The pinned-route tools are rebuilt, not qualified.
- * Sets bit 0 at memcard_region + 0x64 from a nonzero unsigned argument.
- * The compiler removes a redundant byte mask and chooses different registers.
- * Three scalar forms and a byte-bitfield view did not restore the mask.
- * Reopen with evidence for the original type/lifetime representation or a
- * measured compiler-lowering explanation that preserves accepted controls.
- * Not exact; no complete-program gate, promotion or C matching credit.
+ * Observed body: 36 bytes, followed by one zero alignment word.
+ * Measured 14 November 2026: all 36 body bytes are exact after independent
+ * SN linking at the retail address under the rebuilt default GNU route,
+ * gnu-ee-trial and sdk991111, with -O2 -G0 and the default GNU assembler.
+ * The default tools are rebuilt, not hash-qualified. This is an unaccepted
+ * witness: complete-program integration, boundaries, types and qualification
+ * require separate review. No promotion or matching credit is claimed here.
+ * Reconstructed from the retail boot. Bit 0 of the flags byte at
+ * memcard_region + 0x64 is cleared, then set when the argument is nonzero.
+ * The two updates are separate statements on the stored byte, as in
+ * MEMCARD_SetDanSkinUnlocked__FUi; a single expression or a local copy of
+ * the byte compiles to 32 bytes instead.
  */
 extern unsigned char memcard_region[];
 
 void MEMCARD_SetWideScreenToMemcard__FUi(unsigned int enabled) {
-    unsigned char flags;
-    enabled = enabled != 0;
-    flags = memcard_region[0x64];
-    flags &= ~1u;
-    memcard_region[0x64] = (unsigned int)flags | enabled;
+    memcard_region[0x64] &= ~1;
+    memcard_region[0x64] |= (enabled ? 1 : 0);
 }
