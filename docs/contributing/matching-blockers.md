@@ -283,6 +283,28 @@ The same profile left 498 other retained C bodies nonmatching in a 500-body
 comparison, so these two results do not justify a global compiler switch.
 Regenerate `progress/status.json` after changing source profiles.
 
+**Boot memory-card helpers, 14 November 2026.** Five retained USA boot
+trials remain nonmatching after an independent SN link at their retail
+addresses. The rebuilt default GNU route, `gnu-ee-trial` and `sdk991111`,
+all with `-O2 -G0` and the same GNU assembler, produce identical linked
+text for the retained sources. The
+[Dan-skin setter](../../nonmatching/boot/MEMCARD_SetDanSkinUnlocked__FUi.c),
+[widescreen setter](../../nonmatching/boot/MEMCARD_SetWideScreenToMemcard__FUi.c)
+and [hardcore setter](../../nonmatching/boot/MEMCARD_SetHardcoreModeBit__FUib.c)
+compile to 32/36, 32/36 and 44/48 bytes respectively; each first differs
+at byte 2. The compiler removes a byte mask retained by retail; three
+scalar forms and a byte-bitfield view did not restore it. The
+[header updater](../../nonmatching/boot/MEMCARD_SetHeaderDetail__FUiUiUiUiUi.c)
+compiles to 40/52 bytes, first difference at byte 17: a typed view and
+byte-offset stores both remove pointer copies and change store order.
+The [saving query](../../nonmatching/boot/MEMCARD_Saving__Fv.c) compiles to
+48/52 bytes, first difference at byte 20; a nested comparison is identical,
+while an early return reaches 52 bytes but changes the return paths.
+Reopen with evidence for the original types/value lifetimes or a measured
+compiler-lowering cause with accepted-body regression controls. These are
+isolated nonmatches, with provisional extents and no complete-program gate
+or matching credit.
+
 ### Blocker 18
 
 Body boundaries, `next_label` and alignment. Measured: a compiled prefix or a `next_label`
