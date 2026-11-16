@@ -346,17 +346,33 @@ Declaration/initialization changes and equivalent loop rewrites did not fix it.
 
 Independent checks verify actual object and linked text/FUNC sizes, exact raw
 body bytes, normal resolution of the two helper references and no absolute-symbol
-masks. Source and preprocessed C policy checks pass. These two candidates still
-remain in `nonmatching/`: no complete-program gate has been run with them,
-rebuilt tools do not qualify the profile and no accepted C credit follows.
+masks. Source and preprocessed C policy checks pass. A temporary integration
+passed with 842 exact objects, all 809,872 load bytes and the complete
+856,120-byte ELF exact. Both symbols were real compiled FUNC owners; all 840
+baseline replacement records and 820 accepted bodies stayed unchanged. Its
+mechanical audit leaves both ready for semantic review with no mechanical
+reason. Metadata was archived then restored; the receipt is historical for that
+restored checkout. The tools were unpinned: both sources remain in `nonmatching/`
+and no qualification or accepted C credit follows.
 This supersedes their earlier differing measurements, not the separate semantic
 and qualification obligations. Unchanged-body C/C++ frontend checks did not
 resolve either original attempt or identify the original compiler.
 
 For `PAR_Reset`, guarding a `do/while` traversal with the initial empty-list test
 still emits 232/236 bytes (default/trial), 87/90 equal positions, first difference
-+0x21. It does not improve the retained source; its list-head lifetime remains
-unresolved. Do not repeat the tested store-order and loop-spelling forms.
++0x21. A later ordinary iterator-object representation resolves the missing
+sentinel lifetime. Address-based comparison examines the current and finishing
+iterators, and a value-returned previous iterator snapshots the reverse link
+before node reset. Combining this with the previously measured two-link-pair
+reset order reproduces all 240 bytes under default GNU. `gnu-ee-trial` instead
+emits 244 bytes, 191 equal positions, first difference +0x98 at loop padding.
+The helpers are fully inlined list operations, with no extra observable use or
+register constraint. Independent semantic review found no new regression;
+4,096 private differential scenarios corroborate the preserved traversal,
+self-links, free-chain rebuild and callback-visible state. Malformed lists,
+arbitrary storage/capacity and indirect-entry boundaries remain open. This new
+PAR candidate still needs complete-program integration and qualification; the
+842-object font experiment above does not cover it.
 
 Two further retained boot sources reproduce their measured bodies after
 independent SN links: [`dlib_displist_set_texture_state`](../../nonmatching/boot/dlib_displist_set_texture_state__FP13DLIB_DISPLISTiUlUlUlUl.c)

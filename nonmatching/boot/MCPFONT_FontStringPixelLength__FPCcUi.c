@@ -2,9 +2,9 @@
  * 0x01E679B8..0x01E67A88, observed 208-byte body, no trailing padding.
  * Reconstructed from the owner's retail body, helper and reviewed callers.
  * Measured 16 November 2026 with -O2 -G0 and independent SN links:
- * rebuilt default GNU and gnu-ee-trial reproduce all 208 body bytes in
- * actual object and linked text. These are local unqualified comparisons;
- * no complete-program gate, acceptance, promotion or matching credit.
+ * rebuilt default GNU and gnu-ee-trial emit real 208-byte object text/FUNC
+ * symbols; independent links reproduce all 208 retail body bytes. These
+ * comparisons do not qualify a profile, promote C or confer matching credit.
  * The original retained form emitted 216 bytes, 63 equal positions, first difference +0x1C.
  * A 16-bit stored total and a wide per-glyph temporary separate lifetimes:
  * the spacing increment may reach 65536 before adding the glyph width and
