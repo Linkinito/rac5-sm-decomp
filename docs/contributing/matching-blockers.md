@@ -322,40 +322,41 @@ next-block value, then two store-order forms, still emits 232/236 bytes with
 first difference +0x21. Store order alone does not explain the missing body
 bytes or the extra live list-head value. Do not repeat those three forms.
 
-A follow-up on 16 November reproduced the retained MCP and PAR measurements
-without changing their sources. For `MCP_FontStringPixelLength`, allocation
-dumps place the index before the width accumulator: 21 weighted references over
-66 instructions versus 10 over 32. Both remain global-allocation candidates.
-A signed working-width representation and a conditional glyph body each produce
-the retained object unchanged. An explicit two-byte skip still has those same
-allocation priorities (216 bytes, 156 equal positions, first difference +0x31).
-Combining the spacing increment with the glyph sum in a 16-bit accumulator
-instead emits 220 bytes, 153 equal positions, first difference +0x28; the sibling
-MCPFONT form emits 220 bytes, 60 equal positions, first difference +0x1C.
-These forms do not resolve the allocation or comparison-constant blockers.
+**Font-width resolution, 16 November 2026.** The retained
+[`MCPFONT_FontStringPixelLength`](../../nonmatching/boot/MCPFONT_FontStringPixelLength__FPCcUi.c)
+and [`MCP_FontStringPixelLength`](../../nonmatching/boot/MCP_FontStringPixelLength__FPCcUi.c)
+now reproduce all 208 and 216 bytes, respectively, with rebuilt default GNU
+and `gnu-ee-trial`, `-O2 -G0`, GNU assembly and independent SN links.
+MCPFONT's authored inline equality predicate removes the loop-held comparison
+constant and extra saved register, first reaching 194/208 equal positions.
+The source uses ordinary equality, with no explicit XOR or register constraint;
+the predicate is fully inlined and emits no extra function.
+
+Both functions then become locally exact by separating the 16-bit stored total
+from a wide per-glyph temporary. The temporary holds total + 1 (at most 65536)
+across the helper calls; adding the glyph byte then narrows the final sum.
+Neither local is exposed to the calls. This preserves wrapping, byte-prefix
+consumption, original out-of-count reads and the reviewed helper ABI.
+Allocation dumps explain the change: the wide temporary is allocated locally,
+while the narrow stored total does not cross either call and can reuse its
+register. The global index receives the other register. The prior single wide
+accumulator left both values to global allocation, which prioritized the index
+(21 weighted references over 66 instructions versus 10 over 32 for the width).
+Declaration/initialization changes and equivalent loop rewrites did not fix it.
+
+Independent checks verify actual object and linked text/FUNC sizes, exact raw
+body bytes, normal resolution of the two helper references and no absolute-symbol
+masks. Source and preprocessed C policy checks pass. These two candidates still
+remain in `nonmatching/`: no complete-program gate has been run with them,
+rebuilt tools do not qualify the profile and no accepted C credit follows.
+This supersedes their earlier differing measurements, not the separate semantic
+and qualification obligations. Unchanged-body C/C++ frontend checks did not
+resolve either original attempt or identify the original compiler.
 
 For `PAR_Reset`, guarding a `do/while` traversal with the initial empty-list test
 still emits 232/236 bytes (default/trial), 87/90 equal positions, first difference
-+0x21. Paired C/C++ frontend checks of the unchanged retained bodies also fail:
-SN 2.95.2 emits 216 bytes/160 equal positions for MCP and 224/90 for PAR in either
-language; EE 991111 emits 216/172 for MCP in either language, and 240/88 (C) or
-244/78 (C++) for PAR. All these frontend comparisons first differ at byte zero.
-They do not identify the original compiler or justify changing a profile.
-
-**MCPFONT improvement, 16 November 2026.** Returning the unchanged byte equality
-from an authored inline classification helper removes the loop-held constant and
-extra saved register. The retained source now emits 208/208 bytes under both
-rebuilt default GNU and `gnu-ee-trial`, 194 equal positions, first difference
-+0x2D. The source contains an ordinary equality, with no explicit XOR, assembly
-or register constraint. The predicate is fully inlined; each object and linked
-ELF has only the real 208-byte target function, not an extra retail-body claim.
-All fourteen differing instructions exchange the index/width registers; sizes,
-other instruction fields and call targets agree. This diagnostic does not make
-the bytes exact. Moving index advancement into the glyph argument instead gives
-208 bytes, 148 equal positions, still first difference +0x2D; it is not retained.
-No complete-program gate, compiler/profile change or C credit follows. Reopening
-now needs allocation/lifetime evidence; repeating declaration or loop rewrites
-does not resolve the remaining exchange. MCP and PAR retain their prior sources.
++0x21. It does not improve the retained source; its list-head lifetime remains
+unresolved. Do not repeat the tested store-order and loop-spelling forms.
 
 Two further retained boot sources reproduce their measured bodies after
 independent SN links: [`dlib_displist_set_texture_state`](../../nonmatching/boot/dlib_displist_set_texture_state__FP13DLIB_DISPLISTiUlUlUlUl.c)

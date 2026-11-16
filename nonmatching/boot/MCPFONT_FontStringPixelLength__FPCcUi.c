@@ -1,24 +1,23 @@
 /* USA SCUS_976.15 boot: MCPFONT_FontStringPixelLength__FPCcUi,
- * 0x01E679B8..0x01E67A88, observed 208-byte body, no trailing alignment word.
- * Reconstructed from the owner's retail body, helper and accepted wrapper.
+ * 0x01E679B8..0x01E67A88, observed 208-byte body, no trailing padding.
+ * Reconstructed from the owner's retail body, helper and reviewed callers.
  * Measured 16 November 2026 with -O2 -G0 and independent SN links:
- * rebuilt default GNU and gnu-ee-trial produce 208 bytes, 194 equal byte
- * positions, first difference at +0x2D. Not exact; no complete-program gate,
- * qualified match, acceptance or promotion.
- * The 14 November direct-comparison form emitted 216 bytes, 63 equal positions
- * and first difference +0x1C. Returning the control classification from an
- * ordinary inline equality helper removes its loop-held comparison constant
- * and extra saved register. This is an authored parser helper, not a claim
- * to have recovered a separately named retail function. No XOR operation,
- * assembly or fixed-register constraint is used to request an instruction.
- * The four-byte glyph return and byte-2 width are proven from both sides;
- * direct member consumption avoids an extra aggregate copy.
- * Byte 0x90 skips itself and the following byte; a nonzero font page consumes
- * one additional byte. Original reads past the supplied count are preserved.
- * The total is reduced to 16 bits after adding each glyph's width plus one.
- * Remaining differences exchange the index and width register assignments.
- * Reopen with new allocation/lifetime evidence; the measured declaration,
- * initialization and loop rewrites do not explain that exchange.
+ * rebuilt default GNU and gnu-ee-trial reproduce all 208 body bytes in
+ * actual object and linked text. These are local unqualified comparisons;
+ * no complete-program gate, acceptance, promotion or matching credit.
+ * The original retained form emitted 216 bytes, 63 equal positions, first difference +0x1C.
+ * A 16-bit stored total and a wide per-glyph temporary separate lifetimes:
+ * the spacing increment may reach 65536 before adding the glyph width and
+ * reducing the sum modulo 65536. Neither local is exposed to either call.
+ * The inline equality predicate is authored classification code, not a
+ * separately named retail-body claim; it emits no extra function.
+ * The page helper keeps its int/unsigned-char interface. The glyph helper
+ * returns four unsigned bytes and accepts two unsigned-byte arguments; byte 2
+ * supplies its width. No implementation is imported.
+ * Byte 0x90 consumes itself and one following byte; a nonzero font page
+ * consumes another byte without an extra count check. Original out-of-count
+ * reads, unsigned index behavior and null/count-zero returns are preserved.
+ * Qualification, indirect-entry boundaries and semantic review remain open.
  */
 typedef struct {
     unsigned char field0;
@@ -37,23 +36,24 @@ static inline int mcpfont_is_control_byte(unsigned char character) {
 
 int MCPFONT_FontStringPixelLength__FPCcUi(const char *text, unsigned int length) {
     unsigned int i;
-    unsigned int width;
+    unsigned short width;
 
     if (text == 0)
         return 0;
     for (i = 0, width = 0; i < length; ++i) {
         unsigned char character = text[i];
         int page;
+        unsigned int glyph_width;
 
         if (mcpfont_is_control_byte(character)) {
             ++i;
             continue;
         }
-        ++width;
+        glyph_width = width + 1;
         page = MCPFONT_GetFontPage__FUc(character);
         if (page != 0)
             ++i;
-        width = (unsigned short)(width + func_1E678A0((unsigned char)text[i], (unsigned char)page).width);
+        width = (unsigned short)(glyph_width + func_1E678A0((unsigned char)text[i], (unsigned char)page).width);
     }
     return width;
 }
