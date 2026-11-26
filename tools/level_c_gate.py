@@ -13,6 +13,7 @@ import json
 import re
 import shutil
 import struct
+from bisect import bisect_left, bisect_right
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -679,16 +680,53 @@ def batch_link_level_bodies(module: str, rows: list[dict],
     return [(row, *by_offset[row["offset"]]) for row in rows], len(groups)
 
 
-def place_body(rebuilt: bytes, body: bytes, start: int, end: int,
-               claimed: list[tuple[int, int]]) -> bytes:
-    """Place a proved body, allowing an overlap only when the bytes agree."""
-    for left, right in claimed:
-        if start < right and left < end:
-            if rebuilt[start:end] != body:
+class ModuleImage:
+    """A module rebuilt in place from proved bodies.
+
+    Placing a body overwrites its range in a ``bytearray`` instead of copying the
+    whole module, and the claimed ranges are kept as a sorted, merged union so the
+    overlap test is a bisection instead of a scan of every earlier placement.
+    The rules are those of the former ``place_body``: a body that overlaps a
+    claimed range is accepted only when it equals the bytes already there, and a
+    new range must satisfy ``replace_range``'s extent check.
+    """
+
+    def __init__(self, data: bytes, claimed: list[tuple[int, int]]) -> None:
+        self.data = bytearray(data)
+        self._starts: list[int] = []
+        self._ends: list[int] = []
+        for start, end in claimed:
+            self._claim(start, end)
+
+    def _claim(self, start: int, end: int) -> None:
+        # Merge with every range that overlaps or touches [start, end).
+        first = bisect_left(self._ends, start)
+        last = bisect_right(self._starts, end)
+        if first < last:
+            start = min(start, self._starts[first])
+            end = max(end, self._ends[last - 1])
+        self._starts[first:last] = [start]
+        self._ends[first:last] = [end]
+
+    def overlaps(self, start: int, end: int) -> bool:
+        # Ranges are disjoint and sorted, so only the last one starting before
+        # ``end`` can reach past ``start``.
+        index = bisect_left(self._starts, end)
+        return index > 0 and self._ends[index - 1] > start
+
+    def place(self, body: bytes, start: int, end: int) -> None:
+        """Place a proved body, allowing an overlap only when the bytes agree."""
+        if self.overlaps(start, end):
+            if self.data[start:end] != body:
                 raise ValueError(f"overlapping level bodies differ at 0x{start:06X}")
-            return rebuilt
-    claimed.append((start, end))
-    return replace_range(rebuilt, body, start, end)
+            return
+        if not CODE_START <= start < end <= len(self.data) or len(body) != end - start:
+            raise ValueError("assembled SNR2 code interval has the wrong extent")
+        self._claim(start, end)
+        self.data[start:end] = body
+
+    def bytes(self) -> bytes:
+        return bytes(self.data)
 
 
 def write_bodies(rows: list[dict],
@@ -1044,6 +1082,7 @@ def main() -> None:
             claimed = [(0x100, 0x108), (start, start + 72)]
             if name == "LEVEL_01.REL":
                 claimed.append((0x190, 0x190 + len(control)))
+            image = ModuleImage(rebuilt, claimed)
             imports, exports = module_symbols(source)
 
             if args.batch_link_size:
@@ -1060,8 +1099,7 @@ def main() -> None:
                     if placed != source[row["offset"]:row["offset"] + row["size"]]:
                         raise ValueError(
                             f"{name} level body differs at 0x{row['offset']:06X}")
-                    rebuilt = place_body(rebuilt, placed, row["offset"],
-                                         row["offset"] + row["size"], claimed)
+                    image.place(placed, row["offset"], row["offset"] + row["size"])
             else:
                 def linked_row(row: dict) -> tuple[dict, bytes, int]:
                     obj_path, obj, object_sha = body_objects[row["source"]]
@@ -1081,8 +1119,8 @@ def main() -> None:
                         if placed != source[row["offset"]:row["offset"] + row["size"]]:
                             raise ValueError(
                                 f"{name} level body differs at 0x{row['offset']:06X}")
-                        rebuilt = place_body(rebuilt, placed, row["offset"],
-                                             row["offset"] + row["size"], claimed)
+                        image.place(placed, row["offset"], row["offset"] + row["size"])
+            rebuilt = image.bytes()
             if sha(rebuilt) != known[name]:
                 raise ValueError(f"{name} complete C-linked module differs")
             if name == "LEVEL_01.REL":
@@ -1120,6 +1158,7 @@ def main() -> None:
             raise ValueError("FRONTEND New Game C body differs")
         candidate = replace_range(candidate, frontend_body, 0x2F80, 0x2F80 + 476)
         claimed = [(0x2CD8, 0x2CD8 + len(control)), (0x2F80, 0x2F80 + 476)]
+        image = ModuleImage(candidate, claimed)
         frontend_imports, frontend_exports = module_symbols(frontend)
         if args.batch_link_size:
             linked, invocations = batch_link_level_bodies(
@@ -1136,8 +1175,7 @@ def main() -> None:
                 if placed != frontend[row["offset"]:row["offset"] + row["size"]]:
                     raise ValueError(
                         f"FRONTEND.REL level body differs at 0x{row['offset']:06X}")
-                candidate = place_body(candidate, placed, row["offset"],
-                                       row["offset"] + row["size"], claimed)
+                image.place(placed, row["offset"], row["offset"] + row["size"])
         else:
             for row in bodies_by_module.get("FRONTEND.REL", []):
                 obj_path, obj, object_sha = body_objects[row["source"]]
@@ -1154,8 +1192,8 @@ def main() -> None:
                 if placed != frontend[row["offset"]:row["offset"] + row["size"]]:
                     raise ValueError(
                         f"FRONTEND.REL level body differs at 0x{row['offset']:06X}")
-                candidate = place_body(candidate, placed, row["offset"],
-                                       row["offset"] + row["size"], claimed)
+                image.place(placed, row["offset"], row["offset"] + row["size"])
+        candidate = image.bytes()
         if sha(candidate) != known["FRONTEND.REL"]:
             raise ValueError("FRONTEND complete control module differs")
         base, load_sha, missing = MEASURED_LOADS["FRONTEND.REL"]
