@@ -2800,6 +2800,15 @@ complete-program gate or a qualification. The sources are in `nonmatching/boot/`
   `GenerateNewPube` reaches 686 of 692: three loop constants are loaded in another
   order. `JigglePube` is 600 of 636 at the retail size, and only its register
   allocation differs.
+- `main` (452 bytes, `gnu-ee-trial`) is exact with an early return on each failure
+  path. The two unnamed routines that follow it in its interval (0x01E65E48 and
+  0x01E65EF0) are separate bodies.
+- `ClankTransExhaust_EmitParticles`, `SkyboardTransExhaust_EmitParticles` (688 bytes
+  each) and `RatchetShipExhaust_EmitParticles` (720), for the overloads taking two
+  joint-storage pointers, are exact under `gnu-ee-trial`. The vector steps go through
+  small inline pointer helpers, and a `float dist[2] = {0}` initializer produces the
+  retail `memset` call. The accepted ship sibling declares its first parameter
+  `char *`, whereas the mangled name says `int`.
 - `SYSTEM_BuildUploadVecs` is blocked like the DMA tags below: its first quadword
   is a 128-bit word-shift chain (46 of 184 bytes through a union).
 
