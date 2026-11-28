@@ -2785,6 +2785,15 @@ complete-program gate or a qualification. The sources are in `nonmatching/boot/`
   followed by Ps2EeAs: the full 616-byte span, padding word included. With GNU `as`
   it is 611 of 612, because the clamp's join label lands after a hazard `nop`. No
   boot route combines those two today.
+- `TJZIP_Decompress` (592 bytes, default route and `gnu-ee-trial`) and
+  `moduleThreadContainer` (216 bytes) are exact. `TJZIP` stores `g_pCallbackAt`
+  before `g_pCallback`. `moduleThreadContainer` keeps retail's uninitialised
+  `argc`, an original bug that review must accept or reject.
+- `BLOOM_Downsample` (first attempt, 635 of 644 under `gnu-ee-trial`): only the
+  argument setup of one three-constant call differs.
+- `TEXMGR_SetActiveTextureFromRenderTarget` (first attempt): its 64-bit clear masks
+  need Ps2EeAs (`as=ps2eeas`). That gives the retail 712 bytes, 174 equal; the
+  callee-saved register allocation differs.
 - `SYSTEM_BuildUploadVecs` is blocked like the DMA tags below: its first quadword
   is a 128-bit word-shift chain (46 of 184 bytes through a union).
 
