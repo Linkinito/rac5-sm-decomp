@@ -15,7 +15,11 @@
    before the loop head, which the retail does not have. Register allocation, branch layout and
    the second (aligned) loop already agree.
    Reopen when a boot assembler without the mfc1 delay is qualified and a hypothesis explains
-   the movable order (loop.c) or the unaligned first loop. */
+   the movable order (loop.c) or the unaligned first loop.
+   Also measured 28 November 2026 with the SN Ps2EeAs assembler route (as=ps2eeas)
+   after gnu-ee-trial: 686 of the 692 body bytes equal, first difference +296 (the
+   object is 696 bytes with its trailing padding word); the remaining words are the
+   order of the three loop constants. */
 typedef struct { float x, y, z; } VEC3;
 typedef struct { unsigned int count; float f4; char pad[8]; VEC3 pts[40]; } PUBE;
 extern int rand(void);

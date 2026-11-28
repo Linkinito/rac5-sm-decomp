@@ -2794,6 +2794,12 @@ complete-program gate or a qualification. The sources are in `nonmatching/boot/`
 - `TEXMGR_SetActiveTextureFromRenderTarget` (first attempt): its 64-bit clear masks
   need Ps2EeAs (`as=ps2eeas`). That gives the retail 712 bytes, 174 equal; the
   callee-saved register allocation differs.
+- `GenerateNewPube` and `JigglePube` (first attempts, `gnu-ee-trial` with
+  `-mno-check-zero-division`). Retail has no delay `nop` after `mfc1`, which only
+  the level `r5900-mfc1` assembler and Ps2EeAs reproduce. With Ps2EeAs,
+  `GenerateNewPube` reaches 686 of 692: three loop constants are loaded in another
+  order. `JigglePube` is 600 of 636 at the retail size, and only its register
+  allocation differs.
 - `SYSTEM_BuildUploadVecs` is blocked like the DMA tags below: its first quadword
   is a 128-bit word-shift chain (46 of 184 bytes through a union).
 
